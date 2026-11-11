@@ -226,14 +226,15 @@ function useFormErrorManagement({
     const isAmountRequiredMissing = isConfirmationAmountMissing(transaction, canEnterScanFieldsManually, isPolicyExpenseChat);
     const isDateRequiredMissing = isConfirmationDateMissing(transaction, shouldShowDate, isReadOnly, canEnterScanFieldsManually, isPolicyExpenseChat);
     const isMerchantRequiredMissing = isConfirmationMerchantMissing(transaction, canEnterScanFieldsManually, isPolicyExpenseChat);
+    const isMerchantEmptyOrMissing = isMerchantRequiredMissing || (isMerchantRequired && isMerchantEmpty);
     useEffect(() => {
         // The predicates above only see the transaction on screen, so the ID keeps the error alive while another
         // receipt of a multi-scan is still partially filled.
-        if (formErrorRef.current !== 'common.error.fieldRequired' || isAmountRequiredMissing || isDateRequiredMissing || isMerchantRequiredMissing || !!partiallyManuallyFilledScanID) {
+        if (formErrorRef.current !== 'common.error.fieldRequired' || isAmountRequiredMissing || isDateRequiredMissing || isMerchantEmptyOrMissing || !!partiallyManuallyFilledScanID) {
             return;
         }
         setFormError('');
-    }, [isAmountRequiredMissing, isDateRequiredMissing, isMerchantRequiredMissing, partiallyManuallyFilledScanID, setFormError]);
+    }, [isAmountRequiredMissing, isDateRequiredMissing, isMerchantEmptyOrMissing, partiallyManuallyFilledScanID, setFormError]);
 
     useEffect(() => {
         const currentFormError = formErrorRef.current;
@@ -266,17 +267,23 @@ function useFormErrorManagement({
     // rendered. Distance requests disable that input, and the read-only menu row it falls back to doesn't show the error,
     // so the distance-amount error stays in the footer. Otherwise an invalid distance expense would fail silently.
     const isSuppressedInline = (error: TranslationPaths | ''): boolean =>
-        error === 'common.error.fieldRequired' || error === 'iou.error.invalidMerchant' || (!isDistanceRequest && error === 'common.error.invalidAmount');
+        error === 'iou.error.invalidMerchant' || (!isDistanceRequest && error === 'common.error.invalidAmount');
 
     const computeErrorMessage = (): string | undefined => {
         if (routeError) {
             return routeError;
+        }
+        if (formError === 'common.error.fieldRequired') {
+            return translate('common.error.pleaseEnterRequiredFields');
         }
         // This runs ahead of the split branch below because splits render those same inline fields, so they duplicate the same way.
         if (isSuppressedInline(formError)) {
             return undefined;
         }
         if (isTypeSplit && !shouldShowReadOnlySplits) {
+            if (debouncedFormError === 'common.error.fieldRequired') {
+                return translate('common.error.pleaseEnterRequiredFields');
+            }
             // Splits render the debounced value, so the suppression has to be re-checked against it. `formError` clears
             // the instant the user fixes the field while `debouncedFormError` lags by USE_DEBOUNCED_STATE_DELAY, and
             // without this the suppressed error would pop into the footer for that window (#96565).
