@@ -1,5 +1,11 @@
 import {act, renderHook} from '@testing-library/react-native';
 
+jest.mock('@expensify/react-native-hybrid-app', () => ({
+    __esModule: true,
+    default: {
+        isHybridApp: jest.fn(() => false),
+    },
+}));
 import {LocaleContextProvider} from '@components/LocaleContextProvider';
 import useFormErrorManagement from '@components/MoneyRequestConfirmationList/hooks/useFormErrorManagement';
 
@@ -131,10 +137,10 @@ describe('useFormErrorManagement', () => {
         expect(result.current.errorMessage).toBeUndefined();
     });
 
-    it('errorMessage suppresses required/invalid amount errors (surfaced inline)', () => {
+    it('errorMessage shows required-field error in the footer, but suppresses invalid amount', () => {
         const {result: required} = renderHook(() => useFormErrorManagement(baseParams), {wrapper: Wrapper});
         act(() => required.current.setFormError('common.error.fieldRequired'));
-        expect(required.current.errorMessage).toBeUndefined();
+        expect(required.current.errorMessage).toBe('Please enter the required fields.');
 
         const {result: invalid} = renderHook(() => useFormErrorManagement(baseParams), {wrapper: Wrapper});
         act(() => invalid.current.setFormError('common.error.invalidAmount'));
