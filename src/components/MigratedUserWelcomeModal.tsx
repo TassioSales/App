@@ -60,10 +60,12 @@ function MigratedUserWelcomeModal() {
     useBeforeRemove(persistDismissal);
 
     const handleClose = () => {
+        Navigation.goBack();
+    };
+
+    const handleConfirm = () => {
         const spendRoute = ROUTES.SEARCH_ROOT.getRoute({query: buildCannedSearchQuery({type: CONST.SEARCH.DATA_TYPES.EXPENSE_REPORT}), searchKey: CONST.SEARCH.SEARCH_KEYS.REPORTS});
-        Navigation.goBack(undefined, {
-            afterTransition: () => Navigation.navigate(spendRoute),
-        });
+        Navigation.goBack(spendRoute);
     };
 
     const onHelp = () => {
@@ -81,7 +83,7 @@ function MigratedUserWelcomeModal() {
             contentStyle={[styles.pt0, styles.pb0]}
         >
             <FeatureTraining
-                onConfirm={handleClose}
+                onConfirm={handleConfirm}
                 onClose={handleClose}
                 shouldUseScrollView
             >
