@@ -44,6 +44,9 @@ type SharedTooltipProps = {
     /** Should render a fullscreen transparent overlay */
     shouldUseOverlay?: boolean;
 
+    /** Whether the actual Tooltip should be rendered. If false, it's just going to return the children */
+    shouldRender?: boolean;
+
     shouldTeleportPortalToModalLayer?: boolean;
     onTooltipPress?: (event: GestureResponderEvent | KeyboardEvent | undefined) => void;
     computeHorizontalShiftForNative?: boolean;
