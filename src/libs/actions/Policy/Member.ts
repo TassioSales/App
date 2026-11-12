@@ -554,7 +554,7 @@ function removeMembers(policy: OnyxEntry<Policy>, selectedMemberEmails: string[]
     if (!isEmptyObject(policy?.primaryLoginsInvited ?? {})) {
         // Take the current policy members and remove them optimistically
         const employeeListEmails = Object.keys(policy?.employeeList ?? {});
-        const remainingLogins = employeeListEmails.filter((email) => !selectedMemberEmails.includes(email));
+        const remainingLogins = employeeListEmails.filter((email) => !selectedMemberEmailsWithDuplicates.includes(email));
         const invitedPrimaryToSecondaryLogins: Record<string, string> = {};
 
         if (policy?.primaryLoginsInvited) {
@@ -572,6 +572,37 @@ function removeMembers(policy: OnyxEntry<Policy>, selectedMemberEmails: string[]
                     primaryLoginsInvited: null,
                 },
             });
+            successData.push({
+                onyxMethod: Onyx.METHOD.MERGE,
+                key: policyKey,
+                value: {
+                    primaryLoginsInvited: null,
+                },
+            });
+        } else {
+            // Remove only the deleted members from primaryLoginsInvited
+            const clearedPrimaryLogins: Record<string, null> = {};
+            for (const [secondaryLogin, primaryLogin] of Object.entries(policy?.primaryLoginsInvited ?? {})) {
+                if (selectedMemberEmailsWithDuplicates.includes(secondaryLogin) || selectedMemberEmailsWithDuplicates.includes(primaryLogin)) {
+                    clearedPrimaryLogins[secondaryLogin] = null;
+                }
+            }
+            if (!isEmptyObject(clearedPrimaryLogins)) {
+                optimisticData.push({
+                    onyxMethod: Onyx.METHOD.MERGE,
+                    key: policyKey,
+                    value: {
+                        primaryLoginsInvited: clearedPrimaryLogins,
+                    },
+                });
+                successData.push({
+                    onyxMethod: Onyx.METHOD.MERGE,
+                    key: policyKey,
+                    value: {
+                        primaryLoginsInvited: clearedPrimaryLogins,
+                    },
+                });
+            }
         }
     }
 
