@@ -1170,7 +1170,9 @@ function invalidateCredentials() {
 
 function invalidateAuthToken() {
     NetworkStore.setAuthToken(INVALID_TOKEN);
-    Onyx.merge(ONYXKEYS.SESSION, {authToken: INVALID_TOKEN, encryptedAuthToken: INVALID_TOKEN});
+    Onyx.merge(ONYXKEYS.SESSION, {authToken: INVALID_TOKEN, encryptedAuthToken: INVALID_TOKEN}).then(() => {
+        openApp();
+    });
 }
 
 /**
