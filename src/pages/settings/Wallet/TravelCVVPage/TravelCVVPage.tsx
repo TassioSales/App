@@ -47,17 +47,23 @@ function TravelCVVPage() {
     const {showLockedAccountModal} = useLockedAccountActions();
 
     // Get CVV from context - shared with TravelCVVVerifyAccountPage
-    const {cvv} = useTravelCVVState();
-    const {setCvv} = useTravelCVVActions();
+    const {cvv, hasAutoNavigated} = useTravelCVVState();
+    const {setCvv, setHasAutoNavigated} = useTravelCVVActions();
     const hasRevealedCVV = !!cvv;
 
     const CVV_LENGTH = cvv?.length ?? 3;
     const MASKED_CVV = '•'.repeat(CVV_LENGTH);
     const cvvDigits = (cvv ?? MASKED_CVV).split('');
 
-    // Clear CVV when the page unmounts (e.g. backdrop close) so it doesn't
-    // remain visible the next time the page is opened
-    useEffect(() => () => setCvv(null), [setCvv]);
+    // Clear CVV and auto-navigation state when the page unmounts (e.g. leaving the flow)
+    // so it resets the next time Travel CVV is opened from Wallet
+    useEffect(
+        () => () => {
+            setCvv(null);
+            setHasAutoNavigated(false);
+        },
+        [setCvv, setHasAutoNavigated],
+    );
 
     const isSignedInAsDelegate = !!account?.delegatedAccess?.delegate || false;
     const isLoadingAccount = isLoadingOnyxValue(accountMetadata);
@@ -66,43 +72,34 @@ function TravelCVVPage() {
 
     // Auto-navigate to the validateCode screen on first mount so the user
     // doesn't have to click "Reveal Details" manually.
-    const hasAutoNavigatedRef = useRef(false);
     useEffect(() => {
-        if (hasAutoNavigatedRef.current) {
-            return;
-        }
-        // If the verify-account (validateCode) screen is already in the navigation
-        // stack, the user has previously visited it during this mount cycle (e.g.
-        // they completed or cancelled the validateCode flow and returned here).
-        // Skip auto-navigation so we don't push a duplicate screen. This check
-        // runs before the loading guards because it doesn't depend on Onyx data.
-        if (isVerifyAccountInStack) {
-            hasAutoNavigatedRef.current = true;
+        if (hasAutoNavigated || isVerifyAccountInStack) {
+            setHasAutoNavigated(true);
             return;
         }
         if (isLoadingAccount || isLoadingLockAccountDetails) {
             return;
         }
-        // Permanent conditions — set the ref so we never retry auto-navigation.
+        // Permanent conditions — set the flag so we never retry auto-navigation.
         // If CVV is already revealed there's no reason to navigate to the validate
         // code screen, and delegates are not allowed to request one. Unlike the
         // transient guards below (offline / locked), these won't change during
-        // this mount, so we mark the ref to stop future effect re-runs.
+        // this mount, so we mark the flag to stop future effect re-runs.
         if (cvv || isSignedInAsDelegate) {
-            hasAutoNavigatedRef.current = true;
+            setHasAutoNavigated(true);
             return;
         }
-        // Transient conditions — we intentionally do NOT set hasAutoNavigatedRef here.
+        // Transient conditions — we intentionally do NOT set hasAutoNavigated here.
         // isOffline and isAccountLocked can change at any time (e.g. the user regains
-        // connectivity or the account is unlocked). By leaving the ref unset, the
+        // connectivity or the account is unlocked). By leaving the flag unset, the
         // effect will re-run and auto-navigate once the blocking condition clears,
         // rather than permanently giving up and forcing the user to tap "Reveal Details".
         if (isOffline || isAccountLocked) {
             return;
         }
-        hasAutoNavigatedRef.current = true;
+        setHasAutoNavigated(true);
         Navigation.navigate(ROUTES.SETTINGS_WALLET_TRAVEL_CVV_VERIFY_ACCOUNT);
-    }, [isLoadingAccount, isLoadingLockAccountDetails, cvv, isSignedInAsDelegate, isOffline, isAccountLocked, isVerifyAccountInStack]);
+    }, [isLoadingAccount, isLoadingLockAccountDetails, cvv, isSignedInAsDelegate, isOffline, isAccountLocked, isVerifyAccountInStack, hasAutoNavigated, setHasAutoNavigated]);
 
     const handleRevealDetailsPress = () => {
         if (isAccountLocked) {
