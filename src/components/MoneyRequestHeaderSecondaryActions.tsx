@@ -251,7 +251,7 @@ function MoneyRequestHeaderSecondaryActions({reportID, onBackButtonPress}: Money
     const [duplicateTargetPolicyCategories] = useOnyx(`${ONYXKEYS.COLLECTION.POLICY_CATEGORIES}${getNonEmptyStringOnyxID(duplicateTargetPolicy?.id)}`);
     const [duplicateTargetPolicyTags] = useOnyx(`${ONYXKEYS.COLLECTION.POLICY_TAGS}${getNonEmptyStringOnyxID(duplicateTargetPolicy?.id)}`);
 
-    const isPerDiemRequestOnNonDefaultWorkspace = isPerDiemRequest(transaction) && duplicateTargetPolicy?.id !== policy?.id;
+    const isPerDiemRequestOnNonDefaultWorkspace = isPerDiemRequest(transaction) && defaultExpensePolicy?.id !== policy?.id;
     const hasCustomUnitOutOfPolicyViolation = hasCustomUnitOutOfPolicyViolationTransactionUtils(transactionViolations);
     const isParentChatReportDM = isDM(chatIOUReport);
     const isDistanceExpenseUnsupportedForDuplicating = !!(
