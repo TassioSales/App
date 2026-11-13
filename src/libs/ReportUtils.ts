@@ -14468,8 +14468,8 @@ function getChatUsedForOnboarding(onboardingValue: OnyxEntry<Onboarding>, concie
 /**
  * Checks if given field has any violations and returns name of the first encountered one
  */
-function getFieldViolation(reportField: PolicyReportField): ReportViolationName | undefined {
-    if (!reportField) {
+function getFieldViolation(reportField: PolicyReportField, report?: OnyxEntry<Report>): ReportViolationName | undefined {
+    if (!reportField || isInvoiceReport(report)) {
         return undefined;
     }
 
