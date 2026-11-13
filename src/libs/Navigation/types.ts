@@ -122,8 +122,8 @@ type NewReportWorkspaceSelectionNavigatorParamList = {
 
 type ReportDetailsNavigatorParamList = {
     [SCREENS.REPORT_DETAILS.DYNAMIC_ROOT]: {
-        reportID: string;
-    };
+        reportID?: string;
+    } | undefined;
     [SCREENS.REPORT_DETAILS.DYNAMIC_SHARE_CODE]: {
         reportID: string;
         shouldShowQRCodeOnly?: string;
